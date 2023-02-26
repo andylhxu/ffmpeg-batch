@@ -18,16 +18,25 @@ class QualityConfig:
     scale: Optional[str]
 
     def __repr__(self):
-        return "[cq{}scale{}]".format(self.cq, self.scale)
+        return "[cq{}scale{}]".format(self.cq, self.scale.replace(":", "by") if self.scale is not None else "O")
 
 
 QUALITY_PRESETS = {
     0: QualityConfig(cq=50, scale=None),
     1: QualityConfig(cq=40, scale=None),
     2: QualityConfig(cq=30, scale=None),
+    3: QualityConfig(cq=25, scale=None),
+    4: QualityConfig(cq=20, scale=None),
     10: QualityConfig(cq=50, scale="1280:720"),
     11: QualityConfig(cq=40, scale="1280:720"),
     12: QualityConfig(cq=30, scale="1280:720"),
+    13: QualityConfig(cq=25, scale="1280:720"),
+    14: QualityConfig(cq=20, scale="1280:720"),
+    20: QualityConfig(cq=50, scale="848:480"),
+    21: QualityConfig(cq=40, scale="848:480"),
+    22: QualityConfig(cq=30, scale="848:480"),
+    23: QualityConfig(cq=25, scale="848:480"),
+    24: QualityConfig(cq=20, scale="848:480"),
 }
 
 def extract_files(input_dir: str) -> List[str]:
@@ -43,11 +52,9 @@ def sanitize_output_video(f: str) -> str:
     # recursively delete matching []
     new = f
     while ("[" in new):
-        print('b4', new)
         l = new.find("[")
         r = new.find("]")
         new = new.replace(new[l:r+1], "")
-        print(new)
     while (" " in new or "-" in new):
         new = new.replace(" ", "")
         new = new.replace("-", "")
@@ -56,9 +63,9 @@ def sanitize_output_video(f: str) -> str:
 def process_videos(filenames: List[str], input_dir: str, output_dir: str, quality: int, clear_queue: bool, clear_output: bool) -> None:
     if clear_output:
         # subprocess.run(["rm", "-r", output_dir + "*"], shell=True)
-        print("Cleared output directory")
+        print("[debug] Cleared output directory")
     if quality not in QUALITY_PRESETS:
-        print("must provide a valid quality preset")
+        print("Must provide a valid quality preset")
         sys.exit(1)
     quality_config = QUALITY_PRESETS[quality]
     for f in filenames:
@@ -66,9 +73,9 @@ def process_videos(filenames: List[str], input_dir: str, output_dir: str, qualit
         output_path = output_dir + str(quality_config) + sanitize_output_video(f)
         output_path = output_path[:-3] + "mkv"
         process_video(input_path=input_path, output_path=output_path, quality_config=quality_config)
-        print("Finished processing: ", f)
+        print("[debug] Finished processing: ", f)
         if clear_queue:
-            print('Clearning the original file in the queue... ')
+            print('[debug] Clearning the original file in the queue... ')
             # subprocess.run(["rm", input_path], shell=True)
 
 
@@ -79,6 +86,7 @@ def process_video(input_path: str, output_path: str, quality_config: QualityConf
         args += ["-vf", "scale={}".format(quality_config.scale)]
     args += BINARY_SUFFIXES + [output_path]
     # argument building
+    print("[debug]", args)
     subprocess.run(args=args, stdout=sys.stdout, stderr=sys.stderr)
 
 
