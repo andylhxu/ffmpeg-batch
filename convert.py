@@ -10,12 +10,13 @@ BINARY_PREFIXES = ["-hwaccel", "auto"]
 
 VIDEO_TOOLBOX_ARGS = ["-c:v", "hevc_videotoolbox", "-q:v"]
 
-BINARY_SUFFIXES = ["-c:a", "libopus", "-vbr", "1", "-b:a", "128k"]
+BINARY_SUFFIXES = ["-c:a", "libopus", "-vbr", "1", "-b:a"]
 
 @dataclass
 class QualityConfig:
     cq: int
     scale: Optional[str]
+    vbr: str = "128k"
 
     def __repr__(self):
         return "[cq{}scale{}]".format(self.cq, self.scale.replace(":", "by") if self.scale is not None else "O")
@@ -26,17 +27,17 @@ QUALITY_PRESETS = {
     1: QualityConfig(cq=40, scale=None),
     2: QualityConfig(cq=30, scale=None),
     3: QualityConfig(cq=25, scale=None),
-    4: QualityConfig(cq=20, scale=None),
+    4: QualityConfig(cq=20, scale=None, vbr="96k"),
     10: QualityConfig(cq=50, scale="1280:720"),
     11: QualityConfig(cq=40, scale="1280:720"),
     12: QualityConfig(cq=30, scale="1280:720"),
     13: QualityConfig(cq=25, scale="1280:720"),
-    14: QualityConfig(cq=20, scale="1280:720"),
+    14: QualityConfig(cq=20, scale="1280:720", vbr="64k"),
     20: QualityConfig(cq=50, scale="848:480"),
     21: QualityConfig(cq=40, scale="848:480"),
     22: QualityConfig(cq=30, scale="848:480"),
     23: QualityConfig(cq=25, scale="848:480"),
-    24: QualityConfig(cq=20, scale="848:480"),
+    24: QualityConfig(cq=20, scale="848:480", vbr="64k"),
 }
 
 def extract_files(input_dir: str) -> List[str]:
@@ -75,7 +76,7 @@ def process_videos(filenames: List[str], input_dir: str, output_dir: str, qualit
         process_video(input_path=input_path, output_path=output_path, quality_config=quality_config)
         print("[debug] Finished processing: ", f)
         if clear_queue:
-            print('[debug] Clearning the original file in the queue... ')
+            print('[debug] Clearing the original file in the queue... ')
             # subprocess.run(["rm", input_path], shell=True)
 
 
@@ -84,7 +85,7 @@ def process_video(input_path: str, output_path: str, quality_config: QualityConf
     args = [BINARY_NAME] + BINARY_PREFIXES + ["-i", input_path] + VIDEO_TOOLBOX_ARGS + [str(quality_config.cq)]
     if quality_config.scale:
         args += ["-vf", "scale={}".format(quality_config.scale)]
-    args += BINARY_SUFFIXES + [output_path]
+    args += BINARY_SUFFIXES + [quality_config.vbr, output_path]
     # argument building
     print("[debug]", args)
     subprocess.run(args=args, stdout=sys.stdout, stderr=sys.stderr)
