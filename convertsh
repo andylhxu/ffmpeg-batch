@@ -1,0 +1,3 @@
+#!/bin/sh
+
+python3 ~/Documents/ffmpeg-videotoolkit/convert.py --inputdir "/Users/luoyuxi/Library/CloudStorage/Dropbox/andy-all-sync-dropbox/anime/queue/" --outputdir "/Users/luoyuxi/Library/CloudStorage/Dropbox/andy-all-sync-dropbox/anime/output/" -cq 1 -co 1 -q $1
